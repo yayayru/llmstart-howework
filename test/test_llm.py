@@ -58,7 +58,7 @@ async def test_llm_response_general_error():
 def test_system_prompt():
     """Тест системного промпта"""
     prompt = get_system_prompt()
-    assert "консультант" in prompt.lower()
+    assert "ассистент" in prompt.lower()
     assert "услуги" in prompt.lower()
     assert "помочь" in prompt.lower()
     assert len(prompt) > 50  # Промпт должен быть достаточно подробным 
