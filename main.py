@@ -1,0 +1,35 @@
+import asyncio
+import logging
+from aiogram import Bot, Dispatcher
+from config import get_telegram_token, get_log_level
+from bot.handlers import setup_handlers
+
+async def main():
+    """Основная функция запуска бота"""
+    # Настройка логирования
+    logging.basicConfig(
+        level=getattr(logging, get_log_level()),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    logger = logging.getLogger(__name__)
+    logger.info("Starting Telegram bot")
+    
+    # Создание бота и диспетчера
+    bot = Bot(token=get_telegram_token())
+    dp = Dispatcher()
+    
+    # Настройка обработчиков
+    setup_handlers(dp)
+    
+    # Запуск бота
+    try:
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.error(f"Error starting bot: {e}")
+        raise
+    finally:
+        await bot.session.close()
+
+if __name__ == "__main__":
+    asyncio.run(main()) 
