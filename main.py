@@ -3,29 +3,28 @@ import logging
 from aiogram import Bot, Dispatcher
 from config import get_telegram_token, get_log_level
 from bot.handlers import setup_handlers
+from llm.logging_utils import setup_detailed_logging
 
 async def main():
-    """Основная функция запуска бота"""
-    logger = logging.getLogger(__name__)
-    logger.info("Starting Telegram bot")
+    """Основная функция приложения"""
+    # Настройка детального логирования
+    setup_detailed_logging()
     
-    # Создание бота и диспетчера
+    # Инициализация бота
     bot = Bot(token=get_telegram_token())
     dp = Dispatcher()
     
-    # Настройка обработчиков
+    # Регистрация обработчиков
     setup_handlers(dp)
     
-    # Запуск бота
+    logger.info("Starting bot...")
+    
     try:
-        logger.info("Bot is running. Press Ctrl+C to stop.")
         await dp.start_polling(bot)
     except Exception as e:
-        logger.error(f"Error starting bot: {e}")
-        raise
+        logger.error(f"Error during bot polling: {str(e)}")
     finally:
         await bot.session.close()
-        logger.info("Bot session closed")
 
 if __name__ == "__main__":
     # Настройка логирования

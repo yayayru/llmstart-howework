@@ -60,10 +60,10 @@ def clear_dialog_history(chat_id: int) -> None:
 
 def get_dialog_stats() -> Dict[str, int]:
     """
-    Получить статистику диалогов для отладки
+    Получить статистику диалогов
     
     Returns:
-        Словарь со статистикой
+        Словарь со статистикой диалогов
     """
     total_dialogs = len(_dialogs)
     total_messages = sum(len(messages) for messages in _dialogs.values())
