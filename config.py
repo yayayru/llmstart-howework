@@ -5,9 +5,9 @@ load_dotenv()
 
 def get_telegram_token() -> str:
     """Получить токен Telegram бота из переменных окружения"""
-    token = os.getenv("TELEGRAM_TOKEN")
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
-        raise ValueError("TELEGRAM_TOKEN not found in environment variables")
+        raise ValueError("TELEGRAM_BOT_TOKEN not found in environment variables")
     return token
 
 def get_log_level() -> str:
