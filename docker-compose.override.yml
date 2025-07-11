@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  telegram-bot:
+    # Для разработки используем volume mount для live reload
+    volumes:
+      - .:/app
+    
+    # Более детальное логирование для разработки
+    environment:
+      - LOG_LEVEL=DEBUG
+    
+    # Без ограничений ресурсов в разработке
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    
+    # Метки для разработки
+    labels:
+      - "app=telegram-llm-bot"
+      - "version=0.1.0"
+      - "environment=development" 
