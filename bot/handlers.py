@@ -13,7 +13,8 @@ async def cmd_start(message: Message):
     """Обработчик команды /start"""
     chat_id = message.chat.id
     user_id = message.from_user.id if message.from_user else "unknown"
-    logger.info(f"Start command from user {user_id} in chat {chat_id}")
+    user_name = message.from_user.full_name if message.from_user else "Unknown"
+    logger.info(f"🚀 START COMMAND | Chat: {chat_id} | User: {user_name} ({user_id})")
     
     # Очищаем историю диалога при старте
     clear_dialog_history(chat_id)
@@ -41,7 +42,8 @@ async def cmd_services(message: Message):
     """Обработчик команды /services"""
     chat_id = message.chat.id
     user_id = message.from_user.id if message.from_user else "unknown"
-    logger.info(f"Services command from user {user_id} in chat {chat_id}")
+    user_name = message.from_user.full_name if message.from_user else "Unknown"
+    logger.info(f"🔧 SERVICES COMMAND | Chat: {chat_id} | User: {user_name} ({user_id})")
     
     services = get_all_services()
     company_info = get_company_info()
@@ -62,13 +64,15 @@ async def cmd_services(message: Message):
     add_message_to_dialog(chat_id, "user", "/services")
     add_message_to_dialog(chat_id, "assistant", services_message)
     
+    logger.info(f"📤 SERVICES RESPONSE | Chat: {chat_id} | Length: {len(services_message)} chars")
     await message.answer(services_message)
 
 async def cmd_help(message: Message):
     """Обработчик команды /help"""
     chat_id = message.chat.id
     user_id = message.from_user.id if message.from_user else "unknown"
-    logger.info(f"Help command from user {user_id} in chat {chat_id}")
+    user_name = message.from_user.full_name if message.from_user else "Unknown"
+    logger.info(f"❓ HELP COMMAND | Chat: {chat_id} | User: {user_name} ({user_id})")
     
     help_message = "📖 **Справка по использованию бота**\n\n"
     help_message += "🤖 **Что я умею:**\n"
@@ -92,13 +96,15 @@ async def cmd_help(message: Message):
     add_message_to_dialog(chat_id, "user", "/help")
     add_message_to_dialog(chat_id, "assistant", help_message)
     
+    logger.info(f"📤 HELP RESPONSE | Chat: {chat_id} | Length: {len(help_message)} chars")
     await message.answer(help_message)
 
 async def cmd_contact(message: Message):
     """Обработчик команды /contact"""
     chat_id = message.chat.id
     user_id = message.from_user.id if message.from_user else "unknown"
-    logger.info(f"Contact command from user {user_id} in chat {chat_id}")
+    user_name = message.from_user.full_name if message.from_user else "Unknown"
+    logger.info(f"📞 CONTACT COMMAND | Chat: {chat_id} | User: {user_name} ({user_id})")
     
     company_info = get_company_info()
     company_name = company_info.get('name', 'Sign Language Interface')
@@ -120,6 +126,7 @@ async def cmd_contact(message: Message):
     add_message_to_dialog(chat_id, "user", "/contact")
     add_message_to_dialog(chat_id, "assistant", contact_message)
     
+    logger.info(f"📤 CONTACT RESPONSE | Chat: {chat_id} | Length: {len(contact_message)} chars")
     await message.answer(contact_message)
 
 async def handle_message(message: Message):
@@ -127,9 +134,18 @@ async def handle_message(message: Message):
     try:
         chat_id = message.chat.id
         user_id = message.from_user.id if message.from_user else "unknown"
-        user_message = message.text
+        user_name = message.from_user.full_name if message.from_user else "Unknown"
+        user_message = message.text or ""
         
-        logger.info(f"Message from user {user_id} in chat {chat_id}: {user_message}")
+        # Проверяем, что сообщение не пустое
+        if not user_message.strip():
+            logger.warning(f"⚠️ EMPTY MESSAGE | Chat: {chat_id} | User: {user_name} ({user_id})")
+            await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+            return
+        
+        # Детальное логирование входящего сообщения
+        logger.info(f"📨 USER MESSAGE | Chat: {chat_id} | User: {user_name} ({user_id})")
+        logger.info(f"📝 Content: {user_message}")
         
         # Добавляем сообщение пользователя в историю
         add_message_to_dialog(chat_id, "user", user_message)
@@ -143,7 +159,7 @@ async def handle_message(message: Message):
         # Формируем запрос к LLM с динамическим системным промптом и историей
         messages = [{"role": "system", "content": system_prompt}] + history
         
-        logger.info(f"Sending {len(messages)} messages to LLM (including dynamic system prompt)")
+        logger.info(f"🧠 LLM REQUEST | Chat: {chat_id} | Messages: {len(messages)} (system + {len(history)} history)")
         
         # Получаем ответ от LLM
         response = await get_llm_response(messages)
@@ -154,10 +170,13 @@ async def handle_message(message: Message):
         # Отправляем ответ пользователю
         await message.answer(response)
         
-        logger.info(f"Response sent to user {user_id} in chat {chat_id}")
+        # Детальное логирование ответа
+        logger.info(f"🤖 BOT RESPONSE | Chat: {chat_id} | Length: {len(response)} chars")
+        logger.info(f"📤 Content: {response}")
         
     except Exception as e:
-        logger.error(f"Error handling message: {str(e)}")
+        error_msg = f"❌ ERROR | Chat: {chat_id} | Error: {str(e)}"
+        logger.error(error_msg)
         await message.answer("Извините, произошла ошибка. Попробуйте еще раз.")
 
 def setup_handlers(dp: Dispatcher):

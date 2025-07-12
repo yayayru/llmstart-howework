@@ -34,7 +34,19 @@ async def get_llm_response(messages: List[Dict[str, str]], max_retries: int = MA
             model = get_llm_model()
             timeout = get_llm_timeout()
             
-            logger.info(f"LLM request attempt {attempt + 1}/{max_retries + 1}: model={model}, messages_count={len(messages)}")
+            logger.info(f"🔄 LLM REQUEST | Attempt: {attempt + 1}/{max_retries + 1} | Model: {model} | Messages: {len(messages)}")
+            
+            # Логируем системный промпт и последние сообщения
+            if messages:
+                system_msg = messages[0] if messages[0].get('role') == 'system' else None
+                if system_msg:
+                    logger.info(f"🤖 System prompt: {system_msg['content'][:200]}...")
+                
+                # Логируем последние пользовательские сообщения
+                user_messages = [msg for msg in messages if msg.get('role') == 'user']
+                if user_messages:
+                    last_user_msg = user_messages[-1]['content']
+                    logger.info(f"👤 Last user message: {last_user_msg}")
             
             response = await asyncio.to_thread(
                 client.chat.completions.create,
@@ -51,7 +63,8 @@ async def get_llm_response(messages: List[Dict[str, str]], max_retries: int = MA
                 raise APIError("Empty content returned from LLM API")
             
             elapsed_time = time.time() - start_time
-            logger.info(f"LLM response successful: {len(result)} characters, elapsed_time={elapsed_time:.2f}s")
+            logger.info(f"✅ LLM RESPONSE | Success | Length: {len(result)} chars | Time: {elapsed_time:.2f}s")
+            logger.info(f"🎯 LLM Content: {result}")
             
             return result
             
