@@ -7,8 +7,7 @@ from llm.logging_utils import setup_detailed_logging
 
 async def main():
     """Основная функция приложения"""
-    # Настройка детального логирования
-    setup_detailed_logging()
+    logger = logging.getLogger(__name__)
     
     # Инициализация бота
     bot = Bot(token=get_telegram_token())
@@ -27,11 +26,8 @@ async def main():
         await bot.session.close()
 
 if __name__ == "__main__":
-    # Настройка логирования
-    logging.basicConfig(
-        level=getattr(logging, get_log_level()),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    # Настройка логирования только через детальную функцию
+    setup_detailed_logging()
     logger = logging.getLogger(__name__)
     
     try:

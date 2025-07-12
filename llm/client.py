@@ -24,6 +24,24 @@ async def get_llm_response(messages: List[Dict[str, str]], max_retries: int = MA
     """
     start_time = time.time()
     
+    # Логируем только в первый раз, до цикла попыток
+    model = get_llm_model()
+    timeout = get_llm_timeout()
+    
+    logger.info(f"🔄 LLM REQUEST | Model: {model} | Messages: {len(messages)}")
+    
+    # Логируем системный промпт и последние сообщения только один раз
+    if messages:
+        system_msg = messages[0] if messages[0].get('role') == 'system' else None
+        if system_msg:
+            logger.info(f"🤖 System prompt: {system_msg['content'][:200]}...")
+        
+        # Логируем последние пользовательские сообщения
+        user_messages = [msg for msg in messages if msg.get('role') == 'user']
+        if user_messages:
+            last_user_msg = user_messages[-1]['content']
+            logger.info(f"👤 Last user message: {last_user_msg}")
+    
     for attempt in range(max_retries + 1):
         try:
             client = OpenAI(
@@ -31,22 +49,15 @@ async def get_llm_response(messages: List[Dict[str, str]], max_retries: int = MA
                 api_key=get_openrouter_api_key()
             )
             
-            model = get_llm_model()
-            timeout = get_llm_timeout()
+            if attempt > 0:
+                logger.info(f"🔄 LLM RETRY | Attempt: {attempt + 1}/{max_retries + 1}")
             
-            logger.info(f"🔄 LLM REQUEST | Attempt: {attempt + 1}/{max_retries + 1} | Model: {model} | Messages: {len(messages)}")
-            
-            # Логируем системный промпт и последние сообщения
-            if messages:
-                system_msg = messages[0] if messages[0].get('role') == 'system' else None
-                if system_msg:
-                    logger.info(f"🤖 System prompt: {system_msg['content'][:200]}...")
-                
-                # Логируем последние пользовательские сообщения
-                user_messages = [msg for msg in messages if msg.get('role') == 'user']
-                if user_messages:
-                    last_user_msg = user_messages[-1]['content']
-                    logger.info(f"👤 Last user message: {last_user_msg}")
+            response = await asyncio.to_thread(
+                client.chat.completions.create,
+                model=model,
+                messages=messages,
+                timeout=timeout
+            )
             
             response = await asyncio.to_thread(
                 client.chat.completions.create,

@@ -154,31 +154,27 @@ def log_error_context(error_type: str,
 
 def setup_detailed_logging():
     """Настроить детальное логирование для разных компонентов"""
+    from config import get_log_level
+    
+    # Проверяем, не настроено ли уже логирование, чтобы избежать дублирования
+    root_logger = logging.getLogger()
+    if root_logger.hasHandlers():
+        return
     
     # Настройка форматтера для структурированных логов
     detailed_formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Логгер для LLM операций
-    llm_logger = logging.getLogger('llm')
-    llm_handler = logging.StreamHandler()
-    llm_handler.setFormatter(detailed_formatter)
-    llm_logger.addHandler(llm_handler)
-    llm_logger.setLevel(logging.INFO)
+    # Настройка корневого логгера
+    handler = logging.StreamHandler()
+    handler.setFormatter(detailed_formatter)
+    root_logger.addHandler(handler)
+    root_logger.setLevel(getattr(logging, get_log_level()))
     
-    # Логгер для операций бота
-    bot_logger = logging.getLogger('bot')
-    bot_handler = logging.StreamHandler()
-    bot_handler.setFormatter(detailed_formatter)
-    bot_logger.addHandler(bot_handler)
-    bot_logger.setLevel(logging.INFO)
+    # Отключаем слишком подробные логи httpx
+    logging.getLogger('httpx').setLevel(logging.WARNING)
     
-    # Логгер для метрик
-    metrics_logger_inst = logging.getLogger('metrics')
-    metrics_handler = logging.StreamHandler()
-    metrics_handler.setFormatter(detailed_formatter)
-    metrics_logger_inst.addHandler(metrics_handler)
-    metrics_logger_inst.setLevel(logging.INFO)
-    
-    logger.info("Detailed logging setup completed") 
+    # Создаем логгер для этой функции
+    setup_logger = logging.getLogger(__name__)
+    setup_logger.info("Detailed logging setup completed") 
